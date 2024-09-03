@@ -517,10 +517,10 @@ function _logpdf(n::UnivariateNode, x::AbstractVector{<:Real}, θ...)
         return logpdf(Categorical(p_new), x[scope(n)])
 
     elseif typeof(n.dist) == AlphaStable{Float64}
-        # use Gauss-Hermite quadrature to approximate the pdf
-        t, w = gausshermite(50)
-        f(x,t) = Distributions.cf(n.dist, t) * exp(-im * x * t) * exp(t^2)
-        I = dot(w, f.(x[scope(n)], t))/(2*π)
+        # bug in quadrature, use scipy
+        alpha, beta, scale, location = Distributions.params(n.dist)
+	scipy = pyimport("scipy.stats")
+	I = scipy.levy_stable.pdf(x[scope(n)], alpha, beta, scale, location)
         return real(I)
     end
 end
